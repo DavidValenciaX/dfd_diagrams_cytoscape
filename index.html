@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Diagramas de Contexto DFD</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.29.2/cytoscape.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        #cy {
+            width: 600px;
+            height: 400px;
+            border: 1px solid #ccc;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+        button {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generador de Diagramas de Contexto DFD</h1>
+    <textarea id="input" placeholder="Ingrese la descripción del diagrama aquí..."></textarea>
+    <button type="button" onclick="generateDiagram()">Generar Diagrama</button>
+    <div id="cy"></div>
+
+    <script>
+        let cy;
+
+        function initCytoscape() {
+            cy = cytoscape({
+                container: document.getElementById('cy'),
+                style: [
+                    {
+                        selector: 'node',
+                        style: {
+                            'label': 'data(id)',
+                            'text-valign': 'center',
+                            'text-halign': 'center',
+                            'text-wrap': 'wrap',
+                            'text-max-width': '80px',
+                            /* 'font-size': '10rem', */
+                        }
+                    },
+                    {
+                        selector: 'node[type="process"]',
+                        style: {
+                            'label': 'data(id)',
+                            'shape': 'ellipse',
+                            'background-color': '#FFB3BA',
+                            'width': '100px',
+                            'height': '100px',
+                            'text-max-width': '90px',
+                            /* 'text-overflow-wrap': 'anywhere' */ //Se usa para cuando el texto se desborda de los nodos, pero quita los espacios intermedios
+                        }
+                    },
+                    {
+                        selector: 'node[type="entity"]',
+                        style: {
+                            'label': 'data(id)',
+                            'shape': 'round-rectangle',
+                            'background-color': '#BAFFC9',
+                            'width': '120px',
+                            'height': '60px',
+                            'text-max-width': '110px',
+                            /* 'text-overflow-wrap': 'anywhere' */ //Se usa para cuando el texto se desborda de los nodos, pero quita los espacios intermedios
+                        }
+                    },
+                    {
+                        selector: 'edge',
+                        style: {
+                            'width': 1,
+                            'label': 'data(label)',
+                            'curve-style': 'bezier',
+                            'target-arrow-shape': 'triangle',
+                            'font-size': '10rem',
+                            'text-rotation': 'autorotate',
+                            'text-wrap': 'wrap',
+                            'text-max-width': '80px',
+                            'source-endpoint': 'outside-to-node-or-label',
+                            'target-endpoint': 'outside-to-node-or-label',
+                            'text-background-color': 'white',
+                            'text-background-opacity': 1,
+                            'text-background-padding': '2px',
+                            'control-point-distances':'30', /* A series of values that specify for each control point the distance perpendicular to a line formed from source to target, e.g. -20 20 -20. */
+                        }
+                    }
+                ],
+            });
+
+        }
+
+        function generateDiagram() {
+            const input = document.getElementById('input').value;
+            const lines = input.split('\n');
+            
+            cy.elements().remove();
+            
+            // Agregar el proceso principal (sistema)
+            cy.add({ data: { id: 'Sistema', type: 'process' } });
+            
+            lines.forEach(line => {
+                const parts = line.split('->');
+                if (parts.length === 3) {
+                    const [source, label, target] = parts.map(p => p.trim());
+                    
+                    if (!cy.getElementById(source).length) {
+                        cy.add({ data: { id: source, type: 'entity' } });
+                    }
+                    if (!cy.getElementById(target).length) {
+                        cy.add({ data: { id: target, type: 'entity' } });
+                    }
+                    
+                    cy.add({
+                        data: {
+                            id: `${source}-${target}`,
+                            source: source,
+                            target: target,
+                            label: label
+                        }
+                    });
+                }
+            });
+            
+            cy.layout({ name: 'concentric',
+                    /* idealEdgeLength: 100, */ // Solo sirve para el layout cose
+                    /* nodeOverlap: 20, */ // Solo sirve para el layout cose
+                    /* refresh: 20, */ // Solo sirve para el layout cose
+                    /* randomize: false, */ // Solo sirve para el layout cose
+                    /* componentSpacing: 100, */ // Solo sirve para el layout cose
+                    /* nodeRepulsion: 400000, */ // Solo sirve para el layout cose
+                    /* edgeElasticity: 100, */ // Solo sirve para el layout cose
+                    /* nestingFactor: 5, */ // Solo sirve para el layout cose
+                    /* gravity: 80, */ // Solo sirve para el layout cose
+                    /* numIter: 1000, */ // Solo sirve para el layout cose
+                    /* initialTemp: 200, */ // Solo sirve para el layout cose
+                    /* coolingFactor: 0.95, */ // Solo sirve para el layout cose
+                    /* minTemp: 1.0  */ // Solo sirve para el layout cose
+                    fit: true,
+                    padding: 30,
+                    startAngle:  Math.PI / 4,
+                    clockwise: true,
+                    equidistant: true,
+                    minNodeSpacing: 100, // min spacing between outside of nodes (used for radius adjustment)
+                    avoidOverlap: true,
+                    nodeDimensionsIncludeLabels: true, // Excludes the label when calculating node bounding boxes for the layout algorithm
+                    }).run();
+        }
+
+        document.addEventListener('DOMContentLoaded', initCytoscape);
+    </script>
+</body>
+</html>
