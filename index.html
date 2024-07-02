@@ -99,20 +99,23 @@
                             'text-background-opacity': 1,
                             'text-background-padding': '2px',
                             'control-point-distances': function (ele) {
-                                console.log("ele: ", ele.data());
-
-                                let sameNodesCount = parseInt(ele.data('sameNodesCount'));
+                                console.log("ele", ele.data())
+                                let totalSameNodesCount = parseInt(ele.data('totalSameNodesCount'));
+                                let sameNodesIndex = ele.data('sameNodesIndex');
                                 let id = parseInt(ele.id());
                                 let offset = 0;
-                                console.log("30 * sameNodesCount", 30 * sameNodesCount);
+
+                                console.log("id", id);                                
+                                console.log("sameNodesIndex", sameNodesIndex);
+                                console.log("30 * totalSameNodesCount", 30 * totalSameNodesCount);
                                 console.log("-1 ** id * 30", (-1) ** id * 30);
 
-                                if(sameNodesCount > 1) {
-                                    offset = 30 * sameNodesCount + (-1) ** id * 30;
-                                }else{
-                                    offset = 30 * sameNodesCount;
+                                if (totalSameNodesCount > 1) {
+                                    offset = 30 * totalSameNodesCount + (-1) ** id * 30 + sameNodesIndex * 15;
+                                } else {
+                                    offset = 30 * totalSameNodesCount + sameNodesIndex * 15;
                                 }
-                                console.log("offset: ", offset);
+                                console.log("offset", offset);
                                 return offset;
                             },
                         }
@@ -132,6 +135,7 @@
 
             let edgeCounter = 0;
             let edgeCounts = {};
+            let sameNodesIndices = {};
 
             // Primer pase para contar las conexiones source-target
             lines.forEach(line => {
@@ -164,13 +168,19 @@
 
                     const edgeKey = `${source}->${target}`;
 
+                    // Aumentar el índice específico de esta conexión
+                    if (!sameNodesIndices[edgeKey]) {
+                        sameNodesIndices[edgeKey] = 0;
+                    }
+                    sameNodesIndices[edgeKey]++;
+
                     cy.add({
                         data: {
                             id: edgeCounter,
                             source: source,
                             target: target,
                             label: label,
-                            sameNodesCount: edgeCounts[edgeKey],
+                            sameNodesIndex: sameNodesIndices[edgeKey],
                             totalSameNodesCount: edgeCounts[edgeKey]
                         }
                     });
