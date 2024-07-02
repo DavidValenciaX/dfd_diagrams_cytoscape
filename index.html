@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Diagramas de Contexto DFD</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.29.2/cytoscape.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.29.2/cytoscape.min.js" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,21 +15,25 @@
             align-items: center;
             padding: 20px;
         }
+
         #cy {
-            width: 600px;
-            height: 400px;
+            width: 800px;
+            height: 600px;
             border: 1px solid #ccc;
         }
+
         textarea {
             width: 100%;
-            height: 100px;
+            height: 150px;
             margin-bottom: 10px;
         }
+
         button {
             margin-bottom: 10px;
         }
     </style>
 </head>
+
 <body>
     <h1>Generador de Diagramas de Contexto DFD</h1>
     <textarea id="input" placeholder="Ingrese la descripción del diagrama aquí..."></textarea>
@@ -58,9 +64,9 @@
                             'label': 'data(id)',
                             'shape': 'ellipse',
                             'background-color': '#FFB3BA',
-                            'width': '100px',
-                            'height': '100px',
-                            'text-max-width': '90px',
+                            'width': '120px',
+                            'height': '120px',
+                            'text-max-width': '100px',
                             /* 'text-overflow-wrap': 'anywhere' */ //Se usa para cuando el texto se desborda de los nodos, pero quita los espacios intermedios
                         }
                     },
@@ -70,9 +76,9 @@
                             'label': 'data(id)',
                             'shape': 'round-rectangle',
                             'background-color': '#BAFFC9',
-                            'width': '120px',
-                            'height': '60px',
-                            'text-max-width': '110px',
+                            'width': '140px',
+                            'height': '70px',
+                            'text-max-width': '130px',
                             /* 'text-overflow-wrap': 'anywhere' */ //Se usa para cuando el texto se desborda de los nodos, pero quita los espacios intermedios
                         }
                     },
@@ -83,7 +89,7 @@
                             'label': 'data(label)',
                             'curve-style': 'bezier',
                             'target-arrow-shape': 'triangle',
-                            'font-size': '10rem',
+                            'font-size': '10px',
                             'text-rotation': 'autorotate',
                             'text-wrap': 'wrap',
                             'text-max-width': '80px',
@@ -92,72 +98,104 @@
                             'text-background-color': 'white',
                             'text-background-opacity': 1,
                             'text-background-padding': '2px',
-                            'control-point-distances':'30', /* A series of values that specify for each control point the distance perpendicular to a line formed from source to target, e.g. -20 20 -20. */
+                            'control-point-distances': function (ele) {
+                                console.log("ele: ", ele.data());
+
+                                let sameNodesCount = parseInt(ele.data('sameNodesCount'));
+                                let id = parseInt(ele.id());
+                                let offset = 0;
+                                console.log("30 * sameNodesCount", 30 * sameNodesCount);
+                                console.log("-1 ** id * 30", (-1) ** id * 30);
+
+                                if(sameNodesCount > 1) {
+                                    offset = 30 * sameNodesCount + (-1) ** id * 30;
+                                }else{
+                                    offset = 30 * sameNodesCount;
+                                }
+                                console.log("offset: ", offset);
+                                return offset;
+                            },
                         }
                     }
                 ],
             });
-
         }
 
         function generateDiagram() {
             const input = document.getElementById('input').value;
             const lines = input.split('\n');
-            
+
             cy.elements().remove();
-            
+
             // Agregar el proceso principal (sistema)
             cy.add({ data: { id: 'Sistema', type: 'process' } });
-            
+
+            let edgeCounter = 0;
+            let edgeCounts = {};
+
+            // Primer pase para contar las conexiones source-target
             lines.forEach(line => {
                 const parts = line.split('->');
                 if (parts.length === 3) {
                     const [source, label, target] = parts.map(p => p.trim());
-                    
+
+                    const edgeKey = `${source}->${target}`;
+                    if (!edgeCounts[edgeKey]) {
+                        edgeCounts[edgeKey] = 0;
+                    }
+                    edgeCounts[edgeKey]++;
+                }
+            });
+
+            // Segundo pase para agregar elementos y totalSameNodesCount
+            lines.forEach(line => {
+                const parts = line.split('->');
+                if (parts.length === 3) {
+                    const [source, label, target] = parts.map(p => p.trim());
+
                     if (!cy.getElementById(source).length) {
                         cy.add({ data: { id: source, type: 'entity' } });
                     }
                     if (!cy.getElementById(target).length) {
                         cy.add({ data: { id: target, type: 'entity' } });
                     }
-                    
+
+                    edgeCounter++;
+
+                    const edgeKey = `${source}->${target}`;
+
                     cy.add({
                         data: {
-                            id: `${source}-${target}`,
+                            id: edgeCounter,
                             source: source,
                             target: target,
-                            label: label
+                            label: label,
+                            sameNodesCount: edgeCounts[edgeKey],
+                            totalSameNodesCount: edgeCounts[edgeKey]
                         }
                     });
                 }
             });
-            
-            cy.layout({ name: 'concentric',
-                    /* idealEdgeLength: 100, */ // Solo sirve para el layout cose
-                    /* nodeOverlap: 20, */ // Solo sirve para el layout cose
-                    /* refresh: 20, */ // Solo sirve para el layout cose
-                    /* randomize: false, */ // Solo sirve para el layout cose
-                    /* componentSpacing: 100, */ // Solo sirve para el layout cose
-                    /* nodeRepulsion: 400000, */ // Solo sirve para el layout cose
-                    /* edgeElasticity: 100, */ // Solo sirve para el layout cose
-                    /* nestingFactor: 5, */ // Solo sirve para el layout cose
-                    /* gravity: 80, */ // Solo sirve para el layout cose
-                    /* numIter: 1000, */ // Solo sirve para el layout cose
-                    /* initialTemp: 200, */ // Solo sirve para el layout cose
-                    /* coolingFactor: 0.95, */ // Solo sirve para el layout cose
-                    /* minTemp: 1.0  */ // Solo sirve para el layout cose
-                    fit: true,
-                    padding: 30,
-                    startAngle:  Math.PI / 4,
-                    clockwise: true,
-                    equidistant: true,
-                    minNodeSpacing: 100, // min spacing between outside of nodes (used for radius adjustment)
-                    avoidOverlap: true,
-                    nodeDimensionsIncludeLabels: true, // Excludes the label when calculating node bounding boxes for the layout algorithm
-                    }).run();
+
+            cy.layout({
+                name: 'concentric',
+                fit: true,
+                padding: 50,
+                startAngle: Math.PI / 4,
+                clockwise: true,
+                equidistant: false,
+                minNodeSpacing: 150,
+                avoidOverlap: true,
+                nodeDimensionsIncludeLabels: true,
+                concentric: function (node) {
+                    return node.data('type') === 'process' ? 2 : 1;
+                },
+                levelWidth: function () { return 1; }
+            }).run();
         }
 
         document.addEventListener('DOMContentLoaded', initCytoscape);
     </script>
 </body>
+
 </html>
