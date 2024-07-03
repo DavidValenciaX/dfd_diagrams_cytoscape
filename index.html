@@ -13,7 +13,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 10px;
+            margin-top: 10px;
         }
 
         #cy {
@@ -23,9 +30,12 @@
         }
 
         textarea {
-            width: 100%;
-            height: 150px;
+            width: 90%;
+            /* height: 150px; */
+            field-sizing: content;
+            margin: 0 auto;
             margin-bottom: 10px;
+            resize: none;
         }
 
         button {
@@ -35,7 +45,7 @@
 </head>
 
 <body>
-    <h1>Generador de Diagramas de Contexto DFD</h1>
+    <h1 class="title">Generador de Diagramas de Contexto DFD</h1>
     <textarea id="input" placeholder="Ingrese la descripción del diagrama aquí..."></textarea>
     <button type="button" onclick="generateDiagram()">Generar Diagrama</button>
     <div id="cy"></div>
@@ -61,7 +71,6 @@
                     {
                         selector: 'node[type="process"]',
                         style: {
-                            'label': 'data(id)',
                             'shape': 'ellipse',
                             'background-color': '#FFB3BA',
                             'width': '120px',
@@ -73,7 +82,6 @@
                     {
                         selector: 'node[type="entity"]',
                         style: {
-                            'label': 'data(id)',
                             'shape': 'round-rectangle',
                             'background-color': '#BAFFC9',
                             'width': '140px',
@@ -111,78 +119,82 @@
 
             cy.elements().remove();
 
-            // Agregar el proceso principal (sistema)
-            cy.add({ data: { id: 'Sistema', type: 'process' } });
+            const elements = [];
+            const edges = [];
+            const processes = new Set();
+            const entities = new Set();
 
-            let edgeCounter = 0;
-            let edgeCounts = {};
-            let sameNodesIndices = {};
-
-            // Primer pase para contar las conexiones source-target
+            // Parsing the input lines
             lines.forEach(line => {
-                const parts = line.split('->');
-                if (parts.length === 3) {
-                    const [source, label, target] = parts.map(p => p.trim());
+                if (line.startsWith('Proceso:')) {
+                    const processName = line.replace('Proceso:', '').trim();
+                    elements.push({ data: { id: processName, type: 'process' } });
+                    processes.add(processName);
+                } else if (line.startsWith('Entidad:')) {
+                    const entityName = line.replace('Entidad:', '').trim();
+                    elements.push({ data: { id: entityName, type: 'entity' } });
+                    entities.add(entityName);
+                } else {
+                    const parts = line.split('->');
+                    if (parts.length === 3) {
+                        const [source, label, target] = parts.map(p => p.trim());
 
-                    const edgeKey = `${source}->${target}`;
-                    if (!edgeCounts[edgeKey]) {
-                        edgeCounts[edgeKey] = 0;
-                    }
-                    edgeCounts[edgeKey]++;
-                }
-            });
-
-            // Segundo pase para agregar elementos y totalSameNodesCount
-            lines.forEach(line => {
-                const parts = line.split('->');
-                if (parts.length === 3) {
-                    const [source, label, target] = parts.map(p => p.trim());
-
-                    if (!cy.getElementById(source).length) {
-                        cy.add({ data: { id: source, type: 'entity' } });
-                    }
-                    if (!cy.getElementById(target).length) {
-                        cy.add({ data: { id: target, type: 'entity' } });
-                    }
-
-                    edgeCounter++;
-
-                    const edgeKey = `${source}->${target}`;
-
-                    // Aumentar el índice específico de esta conexión
-                    if (!sameNodesIndices[edgeKey]) {
-                        sameNodesIndices[edgeKey] = 0;
-                    }
-                    sameNodesIndices[edgeKey]++;
-
-                    cy.add({
-                        data: {
-                            id: edgeCounter,
-                            source: source,
-                            target: target,
-                            label: label,
-                            sameNodesIndex: sameNodesIndices[edgeKey],
-                            totalSameNodesCount: edgeCounts[edgeKey]
+                        if (!processes.has(source) && !entities.has(source)) {
+                            elements.push({ data: { id: source, type: 'entity' } });
+                            entities.add(source);
                         }
-                    });
+                        if (!processes.has(target) && !entities.has(target)) {
+                            elements.push({ data: { id: target, type: 'entity' } });
+                            entities.add(target);
+                        }
+
+                        edges.push({
+                            data: {
+                                id: `edge${edges.length}`,
+                                source: source,
+                                target: target,
+                                label: label
+                            }
+                        });
+                    }
                 }
             });
 
-            cy.layout({
+            cy.add(elements);
+            cy.add(edges);
+
+            const layoutOptions = processes.size === 1 ? {
                 name: 'concentric',
                 fit: true,
-                padding: 50,
+                padding: 30,
                 startAngle: Math.PI / 4,
                 clockwise: true,
                 equidistant: false,
                 minNodeSpacing: 150,
                 avoidOverlap: true,
                 nodeDimensionsIncludeLabels: true,
-                concentric: function (node) {
-                    return node.data('type') === 'process' ? 2 : 1;
-                },
-                levelWidth: function () { return 1; }
-            }).run();
+                concentric: node => node.data('type') === 'process' ? 2 : 1,
+                levelWidth: () => 1
+            } : {
+                name: 'cose',
+                idealEdgeLength: 150,
+                nodeOverlap: 20,
+                refresh: 20,
+                fit: true,
+                padding: 30,
+                randomize: false,
+                componentSpacing: 100,
+                nodeRepulsion: 400000,
+                edgeElasticity: 100,
+                nestingFactor: 5,
+                gravity: 80,
+                numIter: 1000,
+                initialTemp: 200,
+                coolingFactor: 0.95,
+                minTemp: 1.0,
+            };
+
+            cy.layout(layoutOptions).run();
         }
 
         document.addEventListener('DOMContentLoaded', initCytoscape);
