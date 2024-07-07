@@ -126,16 +126,16 @@
 
             // Parsing the input lines
             lines.forEach(line => {
-                if (line.startsWith('Proceso:') || line.startsWith('process ')) {
+                if (line.startsWith('process ')) {
                     const parts = line.split(' as ');
-                    const processName = parts.length === 2 ? parts[1].trim() : line.replace('Proceso:', '').replace('process', '').trim();
-                    const alias = parts.length === 2 ? parts[0].replace('Proceso:', '').replace('process', '').trim() : processName;
+                    const processName = parts[1].trim();
+                    const alias = parts[0].replace('process ', '').trim();
                     elements.push({ data: { id: alias, label: processName, type: 'process' } });
                     processes.set(alias, processName);
-                } else if (line.startsWith('Entidad:') || line.startsWith('entity ')) {
+                } else if (line.startsWith('entity ')) {
                     const parts = line.split(' as ');
-                    const entityName = parts.length === 2 ? parts[1].trim() : line.replace('Entidad:', '').replace('entity', '').trim();
-                    const alias = parts.length === 2 ? parts[0].replace('Entidad:', '').replace('entity', '').trim() : entityName;
+                    const entityName = parts[1].trim();
+                    const alias = parts[0].replace('entity ', '').trim();
                     elements.push({ data: { id: alias, label: entityName, type: 'entity' } });
                     entities.set(alias, entityName);
                 } else {
