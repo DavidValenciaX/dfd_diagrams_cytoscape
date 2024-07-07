@@ -60,7 +60,7 @@
                     {
                         selector: 'node',
                         style: {
-                            'label': 'data(id)',
+                            'label': 'data(label)',
                             'text-valign': 'center',
                             'text-halign': 'center',
                             'text-wrap': 'wrap',
@@ -121,31 +121,35 @@
 
             const elements = [];
             const edges = [];
-            const processes = new Set();
-            const entities = new Set();
+            const processes = new Map();
+            const entities = new Map();
 
             // Parsing the input lines
             lines.forEach(line => {
-                if (line.startsWith('Proceso:')) {
-                    const processName = line.replace('Proceso:', '').trim();
-                    elements.push({ data: { id: processName, type: 'process' } });
-                    processes.add(processName);
-                } else if (line.startsWith('Entidad:')) {
-                    const entityName = line.replace('Entidad:', '').trim();
-                    elements.push({ data: { id: entityName, type: 'entity' } });
-                    entities.add(entityName);
+                if (line.startsWith('Proceso:') || line.startsWith('process ')) {
+                    const parts = line.split(' as ');
+                    const processName = parts.length === 2 ? parts[1].trim() : line.replace('Proceso:', '').replace('process', '').trim();
+                    const alias = parts.length === 2 ? parts[0].replace('Proceso:', '').replace('process', '').trim() : processName;
+                    elements.push({ data: { id: alias, label: processName, type: 'process' } });
+                    processes.set(alias, processName);
+                } else if (line.startsWith('Entidad:') || line.startsWith('entity ')) {
+                    const parts = line.split(' as ');
+                    const entityName = parts.length === 2 ? parts[1].trim() : line.replace('Entidad:', '').replace('entity', '').trim();
+                    const alias = parts.length === 2 ? parts[0].replace('Entidad:', '').replace('entity', '').trim() : entityName;
+                    elements.push({ data: { id: alias, label: entityName, type: 'entity' } });
+                    entities.set(alias, entityName);
                 } else {
                     const parts = line.split('->');
                     if (parts.length === 3) {
                         const [source, label, target] = parts.map(p => p.trim());
 
                         if (!processes.has(source) && !entities.has(source)) {
-                            elements.push({ data: { id: source, type: 'entity' } });
-                            entities.add(source);
+                            elements.push({ data: { id: source, label: source, type: 'entity' } });
+                            entities.set(source, source);
                         }
                         if (!processes.has(target) && !entities.has(target)) {
-                            elements.push({ data: { id: target, type: 'entity' } });
-                            entities.add(target);
+                            elements.push({ data: { id: target, label: target, type: 'entity' } });
+                            entities.set(target, target);
                         }
 
                         edges.push({
