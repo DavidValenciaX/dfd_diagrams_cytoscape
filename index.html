@@ -40,6 +40,22 @@
         button {
             margin-bottom: 10px;
         }
+
+        .examples {
+            width: 90%;
+            margin: 20px 0;
+        }
+
+        .example {
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .example-title {
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -48,6 +64,87 @@
     <textarea id="input" placeholder="Ingrese la descripción del diagrama aquí..."></textarea>
     <button type="button" onclick="generateDiagram()">Generar Diagrama</button>
     <div id="cy"></div>
+
+    <div class="examples">
+        <div class="example">
+            <div class="example-title">Ejemplo nivel 0 - opción 1</div>
+            <pre># Declaración de Elementos
+process P1 as Sistema de gestión de inventarios
+entity E1 as Cliente
+entity E2 as Proveedor
+entity E3 as Gerente
+
+# Conexiones de flujos de datos
+E1 -> Solicitud de pedido -> P1
+P1 -> Confirmación de pedido -> E1
+E1 -> Consulta de estado de pedido -> P1
+P1 -> Confirmación de estado de pedido -> E1
+E2 -> Suministro de productos -> P1
+P1 -> Orden de compra -> E2
+E3 -> Solicitud de reporte de inventario -> P1
+P1 -> Reporte de inventario -> E3</pre>
+        </div>
+        <div class="example">
+            <div class="example-title">Ejemplo nivel 0 - opción 2</div>
+            <pre># Declaración de Elementos
+process P1 as Sistema de gestión de inventarios
+entity E1 as Cliente
+entity E2 as Proveedor
+entity E3 as Gerente
+
+# Conexiones de flujos de datos
+Cliente -> Solicitud de pedido -> Sistema de gestión de inventarios
+Sistema de gestión de inventarios -> Confirmación de pedido -> Cliente
+Cliente -> Consulta de estado de pedido -> Sistema de gestión de inventarios
+Sistema de gestión de inventarios -> Confirmación de estado de pedido -> Cliente
+Proveedor -> Suministro de productos -> Sistema de gestión de inventarios
+Sistema de gestión de inventarios -> Orden de compra -> Proveedor
+Gerente -> Solicitud de reporte de inventario -> Sistema de gestión de inventarios
+Sistema de gestión de inventarios -> Reporte de inventario -> Gerente</pre>
+        </div>
+        <div class="example">
+            <div class="example-title">Ejemplo nivel 1 - opción 1</div>
+            <pre># Declaración de Elementos
+process P1 as Sistema de gestión de inventarios
+process P2 as Sistema de Contabilidad
+entity E1 as Cliente
+entity E2 as Proveedor
+entity E3 as Gerente
+
+# Conexiones de flujos de datos
+E1 -> Solicitud de pedido -> P1
+P1 -> Confirmación de pedido -> E1
+E1 -> Consulta de estado de pedido -> P1
+P1 -> Confirmación de estado de pedido -> E1
+E2 -> Suministro de productos -> P1
+P1 -> Orden de compra -> E2
+E3 -> Solicitud de reporte de inventario -> P1
+P1 -> Reporte de inventario -> E3
+P1 -> Actualización de inventario -> P2
+P2 -> Confirmación de actualización -> P1</pre>
+        </div>
+        <div class="example">
+            <div class="example-title">Ejemplo nivel 1 - opción 2</div>
+            <pre># Declaración de Elementos
+process P1 as Sistema de gestión de inventarios
+process P2 as Sistema de Contabilidad
+entity E1 as Cliente
+entity E2 as Proveedor
+entity E3 as Gerente
+
+# Conexiones de flujos de datos
+Cliente -> Solicitud de pedido -> Sistema de gestión de inventarios
+Sistema de gestión de inventarios -> Confirmación de pedido -> Cliente
+Cliente -> Consulta de estado de pedido -> Sistema de gestión de inventarios
+Sistema de gestión de inventarios -> Confirmación de estado de pedido -> Cliente
+Proveedor -> Suministro de productos -> Sistema de gestión de inventarios
+Sistema de gestión de inventarios -> Orden de compra -> Proveedor
+Gerente -> Solicitud de reporte de inventario -> Sistema de gestión de inventarios
+Sistema de gestión de inventarios -> Reporte de inventario -> Gerente
+Sistema de gestión de inventarios -> Actualización de inventario -> Sistema de Contabilidad
+Sistema de Contabilidad -> Confirmación de actualización -> Sistema de gestión de inventarios</pre>
+        </div>
+    </div>
 
     <script>
         let cy;
