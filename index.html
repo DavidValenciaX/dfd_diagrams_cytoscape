@@ -141,7 +141,17 @@
                 } else {
                     const parts = line.split('->');
                     if (parts.length === 3) {
-                        const [source, label, target] = parts.map(p => p.trim());
+                        let [source, label, target] = parts.map(p => p.trim());
+
+                        // Verificar si source y target son nombres completos en lugar de alias
+                        if (!processes.has(source) && !entities.has(source)) {
+                            source = [...processes.entries()].find(([alias, name]) => name === source)?.[0] ||
+                                     [...entities.entries()].find(([alias, name]) => name === source)?.[0] || source;
+                        }
+                        if (!processes.has(target) && !entities.has(target)) {
+                            target = [...processes.entries()].find(([alias, name]) => name === target)?.[0] ||
+                                     [...entities.entries()].find(([alias, name]) => name === target)?.[0] || target;
+                        }
 
                         if (!processes.has(source) && !entities.has(source)) {
                             elements.push({ data: { id: source, label: source, type: 'entity' } });
@@ -164,7 +174,15 @@
                 }
             });
 
-            cy.add(elements);
+            // Verificar duplicación antes de añadir elementos
+            const uniqueElements = elements.reduce((unique, item) => {
+                if (!unique.some(el => el.data.id === item.data.id)) {
+                    unique.push(item);
+                }
+                return unique;
+            }, []);
+
+            cy.add(uniqueElements);
             cy.add(edges);
 
             const layoutOptions = processes.size === 1 ? {
