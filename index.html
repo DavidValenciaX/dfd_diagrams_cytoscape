@@ -31,7 +31,6 @@
 
         textarea {
             width: 90%;
-            /* height: 150px; */
             field-sizing: content;
             margin: 0 auto;
             margin-bottom: 10px;
@@ -64,8 +63,6 @@
                             'text-valign': 'center',
                             'text-halign': 'center',
                             'text-wrap': 'wrap',
-                            'text-max-width': '80px',
-                            /* 'font-size': '10rem', */
                         }
                     },
                     {
@@ -76,7 +73,6 @@
                             'width': '120px',
                             'height': '120px',
                             'text-max-width': '100px',
-                            /* 'text-overflow-wrap': 'anywhere' */ //Se usa para cuando el texto se desborda de los nodos, pero quita los espacios intermedios
                         }
                     },
                     {
@@ -84,10 +80,9 @@
                         style: {
                             'shape': 'round-rectangle',
                             'background-color': '#BAFFC9',
-                            'width': '140px',
-                            'height': '70px',
-                            'text-max-width': '130px',
-                            /* 'text-overflow-wrap': 'anywhere' */ //Se usa para cuando el texto se desborda de los nodos, pero quita los espacios intermedios
+                            'width': 'label',
+                            'height': 'label',
+                            'padding': '10px',
                         }
                     },
                     {
@@ -146,11 +141,11 @@
                         // Verificar si source y target son nombres completos en lugar de alias
                         if (!processes.has(source) && !entities.has(source)) {
                             source = [...processes.entries()].find(([alias, name]) => name === source)?.[0] ||
-                                     [...entities.entries()].find(([alias, name]) => name === source)?.[0] || source;
+                                [...entities.entries()].find(([alias, name]) => name === source)?.[0] || source;
                         }
                         if (!processes.has(target) && !entities.has(target)) {
                             target = [...processes.entries()].find(([alias, name]) => name === target)?.[0] ||
-                                     [...entities.entries()].find(([alias, name]) => name === target)?.[0] || target;
+                                [...entities.entries()].find(([alias, name]) => name === target)?.[0] || target;
                         }
 
                         if (!processes.has(source) && !entities.has(source)) {
