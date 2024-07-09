@@ -37,8 +37,11 @@
             resize: none;
         }
 
-        button {
-            margin-bottom: 10px;
+        .error {
+            width: 90%;
+            color: red;
+            margin-top: 10px;
+            white-space: pre-wrap;
         }
 
         .examples {
@@ -62,8 +65,8 @@
 <body>
     <h1 class="title">Generador de Diagramas de Contexto DFD</h1>
     <textarea id="input" placeholder="Ingrese la descripción del diagrama aquí..."></textarea>
-    <button type="button" onclick="generateDiagram()">Generar Diagrama</button>
     <div id="cy"></div>
+    <div class="error" id="error"></div>
 
     <div class="examples">
         <div class="example">
@@ -208,6 +211,8 @@ Sistema de Contabilidad -> Confirmación de actualización -> Sistema de gestió
         function generateDiagram() {
             const input = document.getElementById('input').value;
             const lines = input.split('\n');
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = '';
 
             cy.elements().remove();
 
@@ -215,17 +220,28 @@ Sistema de Contabilidad -> Confirmación de actualización -> Sistema de gestió
             const edges = [];
             const processes = new Map();
             const entities = new Map();
+            let valid = true;
 
             // Parsing the input lines
             lines.forEach(line => {
                 if (line.startsWith('process ')) {
                     const parts = line.split(' as ');
+                    if (parts.length !== 2) {
+                        valid = false;
+                        errorDiv.textContent += `Error en la línea: ${line}\n`;
+                        return;
+                    }
                     const processName = parts[1].trim();
                     const alias = parts[0].replace('process ', '').trim();
                     elements.push({ data: { id: alias, label: processName, type: 'process' } });
                     processes.set(alias, processName);
                 } else if (line.startsWith('entity ')) {
                     const parts = line.split(' as ');
+                    if (parts.length !== 2) {
+                        valid = false;
+                        errorDiv.textContent += `Error en la línea: ${line}\n`;
+                        return;
+                    }
                     const entityName = parts[1].trim();
                     const alias = parts[0].replace('entity ', '').trim();
                     elements.push({ data: { id: alias, label: entityName, type: 'entity' } });
@@ -262,57 +278,65 @@ Sistema de Contabilidad -> Confirmación de actualización -> Sistema de gestió
                                 label: label
                             }
                         });
+                    } else if (line.trim() !== '') {
+                        valid = false;
+                        errorDiv.textContent += `Error en la línea: ${line}\n`;
                     }
                 }
             });
 
-            // Verificar duplicación antes de añadir elementos
-            const uniqueElements = elements.reduce((unique, item) => {
-                if (!unique.some(el => el.data.id === item.data.id)) {
-                    unique.push(item);
-                }
-                return unique;
-            }, []);
+            if (valid) {
+                // Verificar duplicación antes de añadir elementos
+                const uniqueElements = elements.reduce((unique, item) => {
+                    if (!unique.some(el => el.data.id === item.data.id)) {
+                        unique.push(item);
+                    }
+                    return unique;
+                }, []);
 
-            cy.add(uniqueElements);
-            cy.add(edges);
+                cy.add(uniqueElements);
+                cy.add(edges);
 
-            const layoutOptions = processes.size === 1 ? {
-                name: 'concentric',
-                fit: true,
-                padding: 30,
-                startAngle: Math.PI / 4,
-                clockwise: true,
-                equidistant: false,
-                minNodeSpacing: 150,
-                avoidOverlap: true,
-                nodeDimensionsIncludeLabels: true,
-                concentric: node => node.data('type') === 'process' ? 2 : 1,
-                levelWidth: () => 1
-            } : {
-                name: 'cose',
-                nodeDimensionsIncludeLabels: false,
-                idealEdgeLength: 150,
-                refresh: 20,
-                fit: true,
-                padding: 30,
-                randomize: false,
-                componentSpacing: 100,
-                nodeRepulsion: 1000000,
-                nodeOverlap: 100,
-                edgeElasticity: 50,
-                nestingFactor: 5,
-                gravity: -10,
-                numIter: 1000,
-                initialTemp: 200,
-                coolingFactor: 0.95,
-                minTemp: 1.0,
-            };
+                const layoutOptions = processes.size === 1 ? {
+                    name: 'concentric',
+                    fit: true,
+                    padding: 30,
+                    startAngle: Math.PI / 4,
+                    clockwise: true,
+                    equidistant: false,
+                    minNodeSpacing: 150,
+                    avoidOverlap: true,
+                    nodeDimensionsIncludeLabels: true,
+                    concentric: node => node.data('type') === 'process' ? 2 : 1,
+                    levelWidth: () => 1
+                } : {
+                    name: 'cose',
+                    nodeDimensionsIncludeLabels: false,
+                    idealEdgeLength: 150,
+                    refresh: 20,
+                    fit: true,
+                    padding: 30,
+                    randomize: false,
+                    componentSpacing: 100,
+                    nodeRepulsion: 1000000,
+                    nodeOverlap: 100,
+                    edgeElasticity: 50,
+                    nestingFactor: 5,
+                    gravity: -10,
+                    numIter: 1000,
+                    initialTemp: 200,
+                    coolingFactor: 0.95,
+                    minTemp: 1.0,
+                };
 
-            cy.layout(layoutOptions).run();
+                cy.layout(layoutOptions).run();
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', initCytoscape);
+        document.addEventListener('DOMContentLoaded', () => {
+            initCytoscape();
+            document.getElementById('input').addEventListener('input', generateDiagram);
+        });
     </script>
 </body>
 
