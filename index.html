@@ -224,6 +224,12 @@ Sistema de Contabilidad -> Confirmación de actualización -> Sistema de gestió
 
             // Parsing the input lines
             lines.forEach(line => {
+                line = line.trim(); // Elimina espacios en blanco al inicio y al final de la línea
+                if (line.startsWith('#') || line === '') {
+                    // Ignora las líneas que comienzan con "#" o están vacías
+                    return;
+                }
+
                 if (line.startsWith('process ')) {
                     const parts = line.split(' as ');
                     if (parts.length !== 2) {
