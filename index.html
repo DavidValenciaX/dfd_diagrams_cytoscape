@@ -66,6 +66,8 @@
     <h1 class="title">Generador de Diagramas de Contexto DFD</h1>
     <textarea id="input" placeholder="Ingrese la descripción del diagrama aquí..."></textarea>
     <div id="cy"></div>
+    <br>
+    <button type="button" id="download-btn">Descargar Diagrama como Imagen</button>
     <div class="error" id="error"></div>
 
     <div class="examples">
@@ -338,6 +340,18 @@ Sistema de Contabilidad -> Confirmación de actualización -> Sistema de gestió
                 cy.layout(layoutOptions).run();
             }
         }
+
+        document.getElementById('download-btn').addEventListener('click', function () {
+            const png64 = cy.png({ full: true }); // Genera la imagen en formato PNG como base64
+
+            const link = document.createElement('a'); // Crea un elemento de enlace
+            link.href = png64; // Establece el href como la imagen base64
+            link.download = 'diagrama.png'; // Nombre por defecto para la descarga
+            document.body.appendChild(link); // Añade el enlace al DOM
+            link.click(); // Activa el enlace para descargar
+            document.body.removeChild(link); // Remueve el enlace después de descargar
+        });
+
 
         document.addEventListener('DOMContentLoaded', () => {
             initCytoscape();
